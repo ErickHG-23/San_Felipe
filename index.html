@@ -24,7 +24,9 @@
     </head>
     <body>
         <div id="map">
-        </div>
+</div>
+<div id="leyenda-flotante" style="position:absolute; top:90px; left:10px; z-index:1000; background:rgba(255,255,255,0.9); padding:8px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.3); font-size:12px; max-width:220px; max-height:60vh; overflow-y:auto;">
+</div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
         <script src="js/L.Control.Layers.Tree.min.js"></script>
@@ -542,6 +544,38 @@
             collapsed: false, 
         });
         lay.addTo(map);
+<script>
+(function() {
+    var cajaLeyenda = document.getElementById('leyenda-flotante');
+    var mapaLeyendas = {};
+
+    // Recorre el arbol de capas (incluyendo grupos con "children") y
+    // guarda la relacion id-de-capa -> etiqueta/imagen, ignorando mapas base
+    function registrarCapas(lista) {
+        lista.forEach(function(item) {
+            if (item.children) {
+                registrarCapas(item.children);
+            } else if (item.layer && !item.radioGroup) {
+                mapaLeyendas[L.stamp(item.layer)] = item.label;
+            }
+        });
+    }
+    registrarCapas(overlaysTree);
+
+    function actualizarLeyenda() {
+        var contenido = '';
+        for (var id in mapaLeyendas) {
+            if (map._layers[id]) {
+                contenido += '<div style="margin-bottom:6px;">' + mapaLeyendas[id] + '</div>';
+            }
+        }
+        cajaLeyenda.innerHTML = contenido || '<i>Ninguna capa activa</i>';
+    }
+
+    map.on('overlayadd overlayremove', actualizarLeyenda);
+    setTimeout(actualizarLeyenda, 300);
+})();
+</script>
 		document.addEventListener("DOMContentLoaded", function() {
             // set new Layers List height which considers toggle icon
             function newLayersListHeight() {
