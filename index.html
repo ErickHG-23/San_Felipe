@@ -544,6 +544,12 @@
             collapsed: false, 
         });
         lay.addTo(map);
+			L.control.scale({
+    position: 'topright',
+    metric: true,
+    imperial: false,
+    maxWidth: 150
+}).addTo(map);
 (function() {
     var cajaLeyenda = document.getElementById('leyenda-flotante');
     var mapaLeyendas = {};
