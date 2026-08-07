@@ -25,7 +25,7 @@
     <body>
         <div id="map">
 </div>
-<div id="leyenda-flotante" style="position:absolute; top:90px; left:10px; z-index:1000; background:rgba(255,255,255,0.9); padding:8px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.3); font-size:12px; max-width:220px; max-height:60vh; overflow-y:auto;">
+<div id="leyenda-flotante" style="position:absolute; bottom:10px; left:10px; z-index:1000; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.3); font-size:12px; max-width:230px; max-height:45vh; overflow-y:auto;">
 </div>
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
@@ -523,61 +523,68 @@
 // ============================================================
 var capaINaturalist = L.layerGroup();
 
+function agregarObservacion(obs) {
+    if (!obs.geojson) return; // omite observaciones sin coordenadas públicas
+
+    var lat = obs.geojson.coordinates[1];
+    var lng = obs.geojson.coordinates[0];
+
+    var foto = (obs.photos && obs.photos.length > 0)
+        ? obs.photos[0].url.replace('square', 'medium')
+        : null;
+
+    var especie = obs.taxon ? (obs.taxon.preferred_common_name || obs.taxon.name) : 'Sin identificar';
+    var nombreCientifico = obs.taxon ? obs.taxon.name : '';
+    var observador = obs.user ? (obs.user.name || obs.user.login) : 'Anónimo';
+    var fecha = obs.observed_on_string || obs.observed_on || 'Sin fecha';
+    var notas = obs.description ? obs.description : '';
+
+    var popupHtml = '<div style="max-width:220px;">' +
+        (foto ? '<img src="' + foto + '" style="width:100%; border-radius:4px; margin-bottom:6px;">' : '') +
+        '<b>' + especie + '</b>' +
+        (nombreCientifico && nombreCientifico !== especie ? '<br><i>' + nombreCientifico + '</i>' : '') +
+        '<br>Observador: ' + observador +
+        '<br>Fecha: ' + fecha +
+        (notas ? '<br><span style="font-size:11px;">' + notas + '</span>' : '') +
+        '<br><a href="' + obs.uri + '" target="_blank">Ver observación completa</a>' +
+        '</div>';
+
+    L.circleMarker([lat, lng], {
+        pane: 'pane_capaINaturalist',
+        radius: 6,
+        color: '#333',
+        weight: 1,
+        fillColor: '#ff9f1c',
+        fillOpacity: 0.9
+    }).bindPopup(popupHtml).addTo(capaINaturalist);
+}
+
 function cargarObservacionesINaturalist() {
     var proyecto = 'registro-de-vegetacion-en-un-poligono-de-reforestacion-en-san-felipe-los-alzati-zitacuaro-mexico';
-    var url = 'https://api.inaturalist.org/v1/observations?project_id=' + proyecto +
-              '&per_page=200&order_by=observed_on&order=desc';
+    capaINaturalist.clearLayers();
 
-    fetch(url)
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            capaINaturalist.clearLayers(); // limpia antes de recargar, evita duplicados
+    function traerPagina(pagina) {
+        var url = 'https://api.inaturalist.org/v1/observations?project_id=' + proyecto +
+                  '&per_page=200&page=' + pagina + '&order_by=observed_on&order=desc';
 
-            data.results.forEach(function(obs) {
-                if (!obs.geojson) return; // omite observaciones sin coordenadas públicas
+        fetch(url)
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                data.results.forEach(agregarObservacion);
 
-                var lat = obs.geojson.coordinates[1];
-                var lng = obs.geojson.coordinates[0];
-
-                var foto = (obs.photos && obs.photos.length > 0)
-                    ? obs.photos[0].url.replace('square', 'medium')
-                    : null;
-
-                var especie = obs.taxon
-                    ? (obs.taxon.preferred_common_name || obs.taxon.name)
-                    : 'Sin identificar';
-                var nombreCientifico = obs.taxon ? obs.taxon.name : '';
-                var observador = obs.user ? (obs.user.name || obs.user.login) : 'Anónimo';
-                var fecha = obs.observed_on_string || obs.observed_on || 'Sin fecha';
-                var notas = obs.description ? obs.description : '';
-
-                var popupHtml = '<div style="max-width:220px;">' +
-                    (foto ? '<img src="' + foto + '" style="width:100%; border-radius:4px; margin-bottom:6px;">' : '') +
-                    '<b>' + especie + '</b>' +
-                    (nombreCientifico && nombreCientifico !== especie ? '<br><i>' + nombreCientifico + '</i>' : '') +
-                    '<br>Observador: ' + observador +
-                    '<br>Fecha: ' + fecha +
-                    (notas ? '<br><span style="font-size:11px;">' + notas + '</span>' : '') +
-                    '<br><a href="' + obs.uri + '" target="_blank">Ver observación completa</a>' +
-                    '</div>';
-
-                var marcador = L.circleMarker([lat, lng], {
-                    pane: 'pane_capaINaturalist',
-                    radius: 6,
-                    color: '#333',
-                    weight: 1,
-                    fillColor: '#ff9f1c',
-                    fillOpacity: 0.9
-                }).bindPopup(popupHtml);
-
-                capaINaturalist.addLayer(marcador);
+                var totalCargado = pagina * 200;
+                if (totalCargado < data.total_results) {
+                    traerPagina(pagina + 1); // pide la siguiente pagina
+                } else {
+                    console.log('iNaturalist: ' + data.total_results + ' observaciones totales cargadas.');
+                }
+            })
+            .catch(function(err) {
+                console.log('No se pudieron cargar las observaciones de iNaturalist:', err);
             });
+    }
 
-            console.log('iNaturalist: ' + data.results.length + ' observaciones cargadas.');
-        })
-        .catch(function(err) {
-            console.log('No se pudieron cargar las observaciones de iNaturalist:', err);
-        });
+    traerPagina(1);
 }
 
 map.createPane('pane_capaINaturalist');
@@ -624,29 +631,46 @@ setInterval(cargarObservacionesINaturalist, 10 * 60 * 1000);
 }).addTo(map);
 (function() {
     var cajaLeyenda = document.getElementById('leyenda-flotante');
-    var mapaLeyendas = {};
 
-    // Recorre el arbol de capas (incluyendo grupos con "children") y
-    // guarda la relacion id-de-capa -> etiqueta/imagen, ignorando mapas base
-    function registrarCapas(lista) {
-        lista.forEach(function(item) {
-            if (item.children) {
-                registrarCapas(item.children);
-            } else if (item.layer && !item.radioGroup) {
-                mapaLeyendas[L.stamp(item.layer)] = item.label;
-            }
-        });
-    }
-    registrarCapas(overlaysTree);
+    // Colores tomados de tu rampa RdYlGn de 5 clases en QGIS
+    var coloresRampa = ['#d7191c', '#fdae61', '#ffffc0', '#a6d96a', '#1a9641'];
+
+    var leyendaNDVI2025 =
+        '<b>NDVI Agosto 2025</b>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[0] + ';"></span> &le; 0.27</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[1] + ';"></span> 0.27 - 0.43</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[2] + ';"></span> 0.43 - 0.60</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[3] + ';"></span> 0.60 - 0.76</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[4] + ';"></span> &gt; 0.76</div>';
+
+    var leyendaNDVI2026 =
+        '<b>NDVI Mayo 2026</b>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[0] + ';"></span> &le; 0.13</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[1] + ';"></span> 0.13 - 0.33</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[2] + ';"></span> 0.33 - 0.53</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[3] + ';"></span> 0.53 - 0.74</div>' +
+        '<div><span style="display:inline-block;width:12px;height:12px;background:' + coloresRampa[4] + ';"></span> &gt; 0.74</div>';
+
+    // Solo estas 3 capas van a la leyenda flotante
+    var mapaLeyendas = {};
+    mapaLeyendas[L.stamp(layer_UnidadesdeMuestreo_12)] =
+        '<b>Unidades de Muestreo</b><table>' +
+        '<tr><td><img src="legend/UnidadesdeMuestreo_12_UMoyamelprocedentedeCerroPrieto0.png"></td><td>UM oyamel procedente de Cerro Prieto</td></tr>' +
+        '<tr><td><img src="legend/UnidadesdeMuestreo_12_UMoyamelprocedentedelRosario1.png"></td><td>UM oyamel procedente del Rosario</td></tr>' +
+        '<tr><td><img src="legend/UnidadesdeMuestreo_12_UMplantacióndepinos2.png"></td><td>UM plantación de pinos</td></tr>' +
+        '</table>';
+    mapaLeyendas[L.stamp(layer_NDVIAgosto2025_7)] = leyendaNDVI2025;
+    mapaLeyendas[L.stamp(layer_NDVIMayo2026_6)] = leyendaNDVI2026;
 
     function actualizarLeyenda() {
         var contenido = '';
         for (var id in mapaLeyendas) {
             if (map._layers[id]) {
-                contenido += '<div style="margin-bottom:6px;">' + mapaLeyendas[id] + '</div>';
+                contenido += '<div style="margin-bottom:8px;">' + mapaLeyendas[id] + '</div>';
             }
         }
-        cajaLeyenda.innerHTML = contenido || '<i>Ninguna capa activa</i>';
+        cajaLeyenda.innerHTML = contenido;
+        cajaLeyenda.style.display = contenido ? 'block' : 'none';
     }
 
     map.on('overlayadd overlayremove', actualizarLeyenda);
