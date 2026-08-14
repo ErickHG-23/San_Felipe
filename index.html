@@ -536,7 +536,7 @@
         map.getPane('pane_PolgonodeintervencinSanFelipe_19').style['mix-blend-mode'] = 'normal';
         var layer_PolgonodeintervencinSanFelipe_19 = new L.geoJson(json_PolgonodeintervencinSanFelipe_19, { attribution: '', interactive: false, dataVar: 'json_PolgonodeintervencinSanFelipe_19', layerName: 'layer_PolgonodeintervencinSanFelipe_19', pane: 'pane_PolgonodeintervencinSanFelipe_19', onEachFeature: pop_PolgonodeintervencinSanFelipe_19, style: style_PolgonodeintervencinSanFelipe_19_0 });
         bounds_group.addLayer(layer_PolgonodeintervencinSanFelipe_19);
-        map.addLayer(layer_PolgonodeintervencinSanFelipe_19);
+        //map.addLayer(layer_PolgonodeintervencinSanFelipe_19);//
 
         // ============================================================
         // Observaciones ciudadanas de iNaturalist (capa en vivo)
@@ -590,7 +590,7 @@
         map.getPane('pane_capaINaturalist').style.zIndex = 420;
         cargarObservacionesINaturalist();
         setInterval(cargarObservacionesINaturalist, 10 * 60 * 1000);
-
+map.addLayer(layer_PolgonodeintervencinSanFelipe_19);
         var overlaysTree = [
             {label: '<img src="legend/PolgonodeintervencinSanFelipe_19.png" /> Polígono de intervención San Felipe (24.12 ha)', layer: layer_PolgonodeintervencinSanFelipe_19},
             {label: '<img src="legend/red_brechasYcaminos_18.png" /> Red de brechas y caminos', layer: layer_red_brechasYcaminos_18},
