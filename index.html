@@ -525,17 +525,16 @@
         // ============================================================
         // Capa Polígono de intervención San Felipe - SIN POPUP
         // ============================================================
-        function pop_PolgonodeintervencinSanFelipe_19(feature, layer) {
-            // Popup vacío (no se muestra nada)
-            layer.bindPopup('');
-        }
+       function pop_PolgonodeintervencinSanFelipe_19(feature, layer) {
+    // Sin popup - deshabilitado completamente
+}
         function style_PolgonodeintervencinSanFelipe_19_0() {
             return { pane: 'pane_PolgonodeintervencinSanFelipe_19', opacity: 1, color: 'rgba(248,226,9,1.0)', dashArray: '', lineCap: 'butt', lineJoin: 'miter', weight: 3.0, fill: true, fillOpacity: 1, fillColor: 'rgba(242,223,13,0.0)', interactive: true }
         }
         map.createPane('pane_PolgonodeintervencinSanFelipe_19');
         map.getPane('pane_PolgonodeintervencinSanFelipe_19').style.zIndex = 419;
         map.getPane('pane_PolgonodeintervencinSanFelipe_19').style['mix-blend-mode'] = 'normal';
-        var layer_PolgonodeintervencinSanFelipe_19 = new L.geoJson(json_PolgonodeintervencinSanFelipe_19, { attribution: '', interactive: true, dataVar: 'json_PolgonodeintervencinSanFelipe_19', layerName: 'layer_PolgonodeintervencinSanFelipe_19', pane: 'pane_PolgonodeintervencinSanFelipe_19', onEachFeature: pop_PolgonodeintervencinSanFelipe_19, style: style_PolgonodeintervencinSanFelipe_19_0 });
+        var layer_PolgonodeintervencinSanFelipe_19 = new L.geoJson(json_PolgonodeintervencinSanFelipe_19, { attribution: '', interactive: false, dataVar: 'json_PolgonodeintervencinSanFelipe_19', layerName: 'layer_PolgonodeintervencinSanFelipe_19', pane: 'pane_PolgonodeintervencinSanFelipe_19', onEachFeature: pop_PolgonodeintervencinSanFelipe_19, style: style_PolgonodeintervencinSanFelipe_19_0 });
         bounds_group.addLayer(layer_PolgonodeintervencinSanFelipe_19);
         map.addLayer(layer_PolgonodeintervencinSanFelipe_19);
 
