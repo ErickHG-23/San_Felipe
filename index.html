@@ -27,6 +27,50 @@
             opacity: 0.8;
             transition: opacity 0.2s;
         }
+        /* Estilos para los botones */
+        .btn-custom {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: background-color 0.2s, transform 0.1s;
+            cursor: pointer;
+            border: none;
+            text-align: center;
+            min-width: 120px;
+            margin-bottom: 6px;
+        }
+        .btn-custom:hover {
+            background-color: #3e8e41;
+            transform: scale(1.02);
+        }
+        .btn-custom.btn-inaturalist {
+            background-color: #2d9b4e;
+        }
+        .btn-custom.btn-inaturalist:hover {
+            background-color: #1f7a3a;
+        }
+        .btn-custom.btn-tecnico {
+            background-color: #1a73e8;
+        }
+        .btn-custom.btn-tecnico:hover {
+            background-color: #1557b0;
+        }
+        #botones-container {
+            position: absolute;
+            bottom: 70px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
         </style>
         <title>Polígono de reforestación | C. I. San Felipe los Alzati</title>
     </head>
@@ -34,6 +78,11 @@
         <div id="map">
         </div>
         <div id="leyenda-flotante" style="position:absolute; bottom:10px; left:10px; z-index:1000; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.3); font-size:12px; max-width:230px; max-height:45vh; overflow-y:auto;">
+        </div>
+        <!-- Contenedor de botones (arriba de los logos) -->
+        <div id="botones-container">
+            <a href="https://www.inaturalist.org/projects/registro-de-vegetacion-en-un-poligono-de-reforestacion-en-san-felipe-los-alzati-zitacuaro-mexico" target="_blank" class="btn-custom btn-inaturalist">Proyecto iNaturalist</a>
+            <a href="https://drive.google.com/file/d/1OkUXMy9OShvySLoPuEqJf85VMaELQAhJ/view?usp=sharing" target="_blank" class="btn-custom btn-tecnico">Informe técnico</a>
         </div>
         <div id="logos-caja" style="position:absolute; bottom:10px; right:10px; z-index:1000; background:rgba(255,255,255,0.9); padding:6px 10px; border-radius:6px; display:flex; gap:10px; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,0.3);">
             <a href="https://www.instagram.com/ambiomas_org/" target="_blank" title="Ambiomas">
@@ -473,16 +522,12 @@
         var layer_red_brechasYcaminos_18 = new L.geoJson(json_red_brechasYcaminos_18, { attribution: '', interactive: true, dataVar: 'json_red_brechasYcaminos_18', layerName: 'layer_red_brechasYcaminos_18', pane: 'pane_red_brechasYcaminos_18', onEachFeature: pop_red_brechasYcaminos_18, style: style_red_brechasYcaminos_18_0 });
         bounds_group.addLayer(layer_red_brechasYcaminos_18);
         map.addLayer(layer_red_brechasYcaminos_18);
+        // ============================================================
+        // Capa Polígono de intervención San Felipe - SIN POPUP
+        // ============================================================
         function pop_PolgonodeintervencinSanFelipe_19(feature, layer) {
-            var popupContent = '<table>\
-                    <tr>\
-                        <th scope="row">Ha</th>\
-                        <td>' + (feature.properties['Ha'] !== null ? autolinker.link(String(feature.properties['Ha']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
-                    </tr>\
-                </table>';
-            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
-			layer.on('popupopen', function(e) { addClassToPopupIfMedia(content, e.popup); });
-			layer.bindPopup(content, { maxHeight: 400 });
+            // Popup vacío (no se muestra nada)
+            layer.bindPopup('');
         }
         function style_PolgonodeintervencinSanFelipe_19_0() {
             return { pane: 'pane_PolgonodeintervencinSanFelipe_19', opacity: 1, color: 'rgba(248,226,9,1.0)', dashArray: '', lineCap: 'butt', lineJoin: 'miter', weight: 3.0, fill: true, fillOpacity: 1, fillColor: 'rgba(242,223,13,0.0)', interactive: true }
@@ -548,10 +593,11 @@
         setInterval(cargarObservacionesINaturalist, 10 * 60 * 1000);
 
         var overlaysTree = [
-            {label: '<img src="legend/PolgonodeintervencinSanFelipe_19.png" /> Polígono de intervención San Felipe', layer: layer_PolgonodeintervencinSanFelipe_19},
+            {label: '<img src="legend/PolgonodeintervencinSanFelipe_19.png" /> Polígono de intervención San Felipe (24.12 ha)', layer: layer_PolgonodeintervencinSanFelipe_19},
             {label: '<img src="legend/red_brechasYcaminos_18.png" /> Red de brechas y caminos', layer: layer_red_brechasYcaminos_18},
             {label: "Observaciones proyecto iNaturalist", layer: capaINaturalist},
-            {label: 'Unidades de Muestreo<br /><table><tr><td style="text-align: center;"><img src="legend/UnidadesdeMuestreo_17_UMoyamelprocedentedeCerroPrieto0.png" /></td><td>UM oyamel procedente de Cerro Prieto</td></tr><tr><td style="text-align: center;"><img src="legend/UnidadesdeMuestreo_17_UMoyamelprocedentedelRosario1.png" /></td><td>UM oyamel procedente del Rosario</td></tr><tr><td style="text-align: center;"><img src="legend/UnidadesdeMuestreo_17_UMplantacióndepinos2.png" /></td><td>UM plantación de pinos</td></tr></table>', layer: layer_UnidadesdeMuestreo_17},
+            // Capa Unidades de Muestreo - ahora sin hijos en el panel de capas
+            {label: '<img src="legend/UnidadesdeMuestreo_17_UMoyamelprocedentedeCerroPrieto0.png" /> Unidades de Muestreo', layer: layer_UnidadesdeMuestreo_17},
         {label: '<b>Polígonos de reforestación</b>', collapsed: true, selectAllCheckbox: true, children: [
             {label: '<img src="legend/ReforestacinoyamelprocedenciaCerroPrieto_16.png" /> Reforestación oyamel procedencia Cerro Prieto', layer: layer_ReforestacinoyamelprocedenciaCerroPrieto_16},
             {label: '<img src="legend/ReforestacinoyamelprocedenciaRosario_15.png" /> Reforestación oyamel procedencia Rosario', layer: layer_ReforestacinoyamelprocedenciaRosario_15},
@@ -567,10 +613,14 @@
             {label: "NDVI Mayo 2026", layer: layer_NDVIMayo2026_6},
             {label: "RGB Agosto 2025", layer: layer_RGBAgosto2025_5},
             {label: "RGB Mayo 2026", layer: layer_RGBMayo2026_4},]},
-            {label: "ESRI Satellite", layer: layer_ESRISatellite_3, radioGroup: 'bm' },
-            {label: "ESRI Topo", layer: layer_ESRITopo_2, radioGroup: 'bm' },
-            {label: "ESRI Gray (dark)", layer: layer_ESRIGraydark_1, radioGroup: 'bm' },
-            {label: "ESRI Terrain", layer: layer_ESRITerrain_0, radioGroup: 'bm' },]
+            // Capas base agrupadas en "Mapas base"
+            {label: '<b>Mapas base</b>', collapsed: true, selectAllCheckbox: false, children: [
+                {label: "ESRI Satellite", layer: layer_ESRISatellite_3, radioGroup: 'bm' },
+                {label: "ESRI Topo", layer: layer_ESRITopo_2, radioGroup: 'bm' },
+                {label: "ESRI Gray (dark)", layer: layer_ESRIGraydark_1, radioGroup: 'bm' },
+                {label: "ESRI Terrain", layer: layer_ESRITerrain_0, radioGroup: 'bm' },
+            ]},
+        ];
         var lay = L.control.layers.tree(null, overlaysTree,{ collapsed: false });
         lay.addTo(map);
         L.control.scale({ position: 'topright', metric: true, imperial: false, maxWidth: 150 }).addTo(map);
@@ -627,13 +677,14 @@
                 '<div><span style="display:inline-block;width:12px;height:12px;background:#a6d96a;"></span> 0.55 - 0.65</div>' +
                 '<div><span style="display:inline-block;width:12px;height:12px;background:#1a9641;"></span> 0.65 - 0.83</div>';
 
+            // Leyenda para Unidades de Muestreo (ahora se muestra en la simbología flotante)
+            var leyendaUnidadesMuestreo = '<b>Unidades de Muestreo</b>' +
+                '<div><span style="display:inline-block;width:12px;height:12px;background:#1b6d35;border:1px solid #1b6d35;"></span> UM oyamel procedente de Cerro Prieto</div>' +
+                '<div><span style="display:inline-block;width:12px;height:12px;background:#b7f482;border:1px solid #b7f482;"></span> UM oyamel procedente del Rosario</div>' +
+                '<div><span style="display:inline-block;width:12px;height:12px;background:#02f71f;border:1px solid #02f71f;"></span> UM plantación de pinos</div>';
+
             var mapaLeyendas = {};
-            mapaLeyendas[L.stamp(layer_UnidadesdeMuestreo_17)] =
-                '<b>Unidades de Muestreo</b><table>' +
-                '<tr><td><img src="legend/UnidadesdeMuestreo_17_UMoyamelprocedentedeCerroPrieto0.png"></td><td>UM oyamel procedente de Cerro Prieto</td></tr>' +
-                '<tr><td><img src="legend/UnidadesdeMuestreo_17_UMoyamelprocedentedelRosario1.png"></td><td>UM oyamel procedente del Rosario</td></tr>' +
-                '<tr><td><img src="legend/UnidadesdeMuestreo_17_UMplantacióndepinos2.png"></td><td>UM plantación de pinos</td></tr>' +
-                '</table>';
+            mapaLeyendas[L.stamp(layer_UnidadesdeMuestreo_17)] = leyendaUnidadesMuestreo;
             mapaLeyendas[L.stamp(layer_NDVIAgosto2025_7)] = leyendaNDVI2025;
             mapaLeyendas[L.stamp(layer_NDVIMayo2026_6)] = leyendaNDVI2026;
             mapaLeyendas[L.stamp(layer_Alturapromediodelavegetacinmetros_12)] = leyendaAltura;
