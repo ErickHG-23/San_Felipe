@@ -71,12 +71,135 @@
             align-items: flex-end;
             gap: 4px;
         }
+
+        /* ===== NUEVO: Texto de créditos en el footer ===== */
+        #footer-creditos {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            text-align: center;
+            pointer-events: none;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+            max-width: 85%;
+            padding: 3px 10px;
+            border-radius: 4px;
+            letter-spacing: 0.2px;
+        }
+
+        /* ===== NUEVO: Panel de aviso legal (modal) ===== */
+        #modal-aviso {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, Helvetica, sans-serif;
+            transition: opacity 0.3s ease;
+        }
+        #modal-aviso.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #modal-contenido {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 35px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            text-align: left;
+        }
+        #modal-contenido h2 {
+            margin-top: 0;
+            color: #1a1a2e;
+            font-size: 20px;
+            border-bottom: 2px solid #e8e8e8;
+            padding-bottom: 10px;
+        }
+        #modal-contenido ul {
+            padding-left: 20px;
+            line-height: 1.8;
+            color: #333;
+            font-size: 14px;
+        }
+        #modal-contenido ul li {
+            margin-bottom: 4px;
+        }
+        #modal-contenido .checkbox-container {
+            margin: 20px 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #1a1a2e;
+        }
+        #modal-contenido .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #1a73e8;
+        }
+        #modal-contenido .btn-aceptar {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        #modal-contenido .btn-aceptar:hover {
+            background: #1557b0;
+        }
+        #modal-contenido .btn-aceptar:disabled {
+            background: #aaa;
+            cursor: not-allowed;
+        }
         </style>
         <title>Polígono de reforestación | C. I. San Felipe los Alzati</title>
     </head>
     <body>
         <div id="map">
         </div>
+
+        <!-- ===== NUEVO: Texto de créditos en el footer ===== -->
+        <div id="footer-creditos">
+            Este proyecto fue posible gracias al apoyo de Empresa. Cita sugerida: Autores (2026). "Restauración forestal en San Felipe" [mapa web]
+        </div>
+
+        <!-- ===== NUEVO: Panel de aviso legal (modal) ===== -->
+        <div id="modal-aviso">
+            <div id="modal-contenido">
+                <h2>📋 Aviso de uso</h2>
+                <p style="color:#555; font-size:14px;">Al utilizar este mapa, aceptas los siguientes términos:</p>
+                <ul>
+                    <li><strong>✅ Solo para fines educativos y académicos</strong></li>
+                    <li><strong>🚫 No reproducción total o parcial con fines comerciales sin autorización explícita</strong></li>
+                </ul>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="chk-acepto">
+                    <label for="chk-acepto">He leído y acepto los términos de uso</label>
+                </div>
+                <button class="btn-aceptar" id="btn-aceptar" disabled>Aceptar y continuar</button>
+            </div>
+        </div>
+
         <div id="leyenda-flotante" style="position:absolute; bottom:10px; left:10px; z-index:1000; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.3); font-size:12px; max-width:230px; max-height:45vh; overflow-y:auto;">
         </div>
         <!-- Contenedor de botones (arriba de los logos) -->
@@ -92,6 +215,39 @@
                 <img src="logos/focen.png" style="height:40px;">
             </a>
         </div>
+
+        <!-- ===== NUEVO: Script para manejar el modal ===== -->
+        <script>
+        (function() {
+            var modal = document.getElementById('modal-aviso');
+            var checkbox = document.getElementById('chk-acepto');
+            var btnAceptar = document.getElementById('btn-aceptar');
+
+            // Habilitar botón cuando se marca el checkbox
+            checkbox.addEventListener('change', function() {
+                btnAceptar.disabled = !checkbox.checked;
+            });
+
+            // Al hacer clic en "Aceptar y continuar"
+            btnAceptar.addEventListener('click', function() {
+                if (checkbox.checked) {
+                    modal.classList.add('hidden');
+                    // Guardar preferencia en localStorage para no mostrar de nuevo
+                    try {
+                        localStorage.setItem('aviso-aceptado', 'true');
+                    } catch(e) {}
+                }
+            });
+
+            // Si ya aceptó antes, ocultar el modal directamente
+            try {
+                if (localStorage.getItem('aviso-aceptado') === 'true') {
+                    modal.classList.add('hidden');
+                }
+            } catch(e) {}
+        })();
+        </script>
+
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
         <script src="js/L.Control.Layers.Tree.min.js"></script>
