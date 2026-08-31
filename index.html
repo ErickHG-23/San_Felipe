@@ -12,6 +12,8 @@
         <link rel="stylesheet" href="css/fontawesome-all.min.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
+        <!-- Plugin para cargar archivos (KML, GeoJSON, SHP, KMZ) -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-filelayer@0.1.0/dist/leaflet.filelayer.min.css">
         <style>
         html, body, #map {
             width: 100%;
@@ -171,6 +173,203 @@
             background: #aaa;
             cursor: not-allowed;
         }
+
+        /* ===== NUEVO: Estilos para carga de capas ===== */
+        /* Botón Cargar */
+        .btn-cargar {
+            background-color: #838B8B !important;
+            color: #556B2F !important;
+            min-width: 100px !important;
+            font-size: 13px !important;
+            padding: 6px 12px !important;
+            margin: 0 !important;
+            border-radius: 6px !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+        }
+        .btn-cargar:hover {
+            background-color: #9aa3a3 !important;
+            transform: scale(1.02);
+        }
+
+        /* Contenedor del botón Cargar en esquina inferior izquierda */
+        #cargar-container {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 4px;
+        }
+
+        /* Modal de contraseña */
+        #modal-clave {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #modal-clave.visible {
+            display: flex;
+        }
+        #modal-clave-contenido {
+            background: white;
+            border-radius: 16px;
+            padding: 30px 35px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            text-align: left;
+        }
+        #modal-clave-contenido h3 {
+            margin-top: 0;
+            color: #1a1a2e;
+            font-size: 18px;
+            border-bottom: 2px solid #e8e8e8;
+            padding-bottom: 10px;
+        }
+        #modal-clave-contenido label {
+            display: block;
+            margin: 16px 0 6px 0;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        #modal-clave-contenido input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        #modal-clave-contenido input[type="password"]:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        #modal-clave-contenido .botones-clave {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        #modal-clave-contenido .botones-clave button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #btn-clave-aceptar {
+            background: #1a73e8;
+            color: white;
+        }
+        #btn-clave-aceptar:hover {
+            background: #1557b0;
+        }
+        #btn-clave-cancelar {
+            background: #e0e0e0;
+            color: #333;
+        }
+        #btn-clave-cancelar:hover {
+            background: #c0c0c0;
+        }
+        .mensaje-error-clave {
+            color: #d32f2f;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+            background: #ffebee;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 4px solid #d32f2f;
+        }
+        .mensaje-error-clave.visible {
+            display: block;
+        }
+
+        /* Input de archivo oculto */
+        #input-archivo {
+            display: none;
+        }
+
+        /* Contenedor de capas cargadas */
+        #capas-cargadas-container {
+            position: absolute;
+            bottom: 55px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            max-height: 200px;
+            overflow-y: auto;
+            min-width: 180px;
+            display: none;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+        }
+        #capas-cargadas-container.visible {
+            display: block;
+        }
+        #capas-cargadas-container .capa-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 6px;
+            border-bottom: 1px solid #eee;
+            gap: 10px;
+        }
+        #capas-cargadas-container .capa-item:last-child {
+            border-bottom: none;
+        }
+        #capas-cargadas-container .capa-nombre {
+            flex: 1;
+            color: #1a1a2e;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        #capas-cargadas-container .capa-eliminar {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        #capas-cargadas-container .capa-eliminar:hover {
+            background: #ffebee;
+        }
+        #capas-cargadas-container .btn-eliminar-todas {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            margin-top: 4px;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        #capas-cargadas-container .btn-eliminar-todas:hover {
+            background: #b71c1c;
+        }
         </style>
         <title>Polígono de reforestación | C. I. San Felipe los Alzati</title>
     </head>
@@ -202,6 +401,39 @@
 
         <div id="leyenda-flotante" style="position:absolute; bottom:10px; left:10px; z-index:1000; background:rgba(255,255,255,0.92); padding:8px 10px; border-radius:6px; box-shadow:0 1px 4px rgba(0,0,0,0.3); font-size:12px; max-width:230px; max-height:45vh; overflow-y:auto;">
         </div>
+
+        <!-- ===== NUEVO: Contenedor del botón Cargar en esquina inferior izquierda ===== -->
+        <div id="cargar-container">
+            <button class="btn-custom btn-cargar" id="btn-cargar">📂 Cargar</button>
+        </div>
+
+        <!-- ===== NUEVO: Modal de solicitud de contraseña ===== -->
+        <div id="modal-clave">
+            <div id="modal-clave-contenido">
+                <h3>🔒 Acceso restringido</h3>
+                <p style="color:#555; font-size:14px;">La acción solicitada requiere autorización. Por favor digite la clave de acceso:</p>
+                <label for="input-clave">Clave de acceso</label>
+                <input type="password" id="input-clave" placeholder="Ingrese la clave...">
+                <div class="mensaje-error-clave" id="mensaje-error-clave">❌ Clave inválida. Acción denegada</div>
+                <div class="botones-clave">
+                    <button id="btn-clave-cancelar">Cancelar</button>
+                    <button id="btn-clave-aceptar">Aceptar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== NUEVO: Input de archivo oculto ===== -->
+        <input type="file" id="input-archivo" accept=".kml,.kmz,.geojson,.json,.shp,.zip">
+
+        <!-- ===== NUEVO: Contenedor de capas cargadas ===== -->
+        <div id="capas-cargadas-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <span style="font-weight:bold; font-size:12px; color:#1a1a2e;">📂 Capas cargadas</span>
+                <button class="btn-eliminar-todas" id="btn-eliminar-todas">🗑️ Eliminar todas</button>
+            </div>
+            <div id="lista-capas-cargadas"></div>
+        </div>
+
         <!-- Contenedor de botones (arriba de los logos) -->
         <div id="botones-container">
             <a href="https://www.inaturalist.org/projects/registro-de-vegetacion-en-un-poligono-de-reforestacion-en-san-felipe-los-alzati-zitacuaro-mexico" target="_blank" class="btn-custom btn-inaturalist">Proyecto iNaturalist</a>
@@ -216,30 +448,26 @@
             </a>
         </div>
 
-        <!-- ===== NUEVO: Script para manejar el modal ===== -->
+        <!-- ===== NUEVO: Script para manejar el modal de aviso ===== -->
         <script>
         (function() {
             var modal = document.getElementById('modal-aviso');
             var checkbox = document.getElementById('chk-acepto');
             var btnAceptar = document.getElementById('btn-aceptar');
 
-            // Habilitar botón cuando se marca el checkbox
             checkbox.addEventListener('change', function() {
                 btnAceptar.disabled = !checkbox.checked;
             });
 
-            // Al hacer clic en "Aceptar y continuar"
             btnAceptar.addEventListener('click', function() {
                 if (checkbox.checked) {
                     modal.classList.add('hidden');
-                    // Guardar preferencia en localStorage para no mostrar de nuevo
                     try {
                         localStorage.setItem('aviso-aceptado', 'true');
                     } catch(e) {}
                 }
             });
 
-            // Si ya aceptó antes, ocultar el modal directamente
             try {
                 if (localStorage.getItem('aviso-aceptado') === 'true') {
                     modal.classList.add('hidden');
@@ -260,6 +488,11 @@
         <script src="js/labels.js"></script>
         <script src="js/leaflet.photon.js"></script>
         <script src="js/leaflet-measure.js"></script>
+        <!-- ===== NUEVO: Plugin para cargar archivos ===== -->
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-filelayer@0.1.0/dist/leaflet.filelayer.min.js"></script>
+        <!-- ===== NUEVO: Librería para leer archivos SHP ===== -->
+        <script src="https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js"></script>
+
         <script src="data/PromedioNDVImayo2026_8.js"></script>
         <script src="data/PromedioNDVIagosto2025_9.js"></script>
         <script src="data/Coberturadevegetacin1metro_10.js"></script>
@@ -904,6 +1137,365 @@ map.addLayer(layer_PolgonodeintervencinSanFelipe_19);
         });
         setBounds();
         L.ImageOverlay.include({ getBounds: function () { return this._bounds; } });
+
+        // ================================================================
+        // ===== NUEVO: Funcionalidad de carga de capas =====
+        // ================================================================
+
+        // ---- Variables globales ----
+        var CLAVE_AUTORIZADA = "sanfelipe2026";
+        var capasCargadas = {}; // Objeto para almacenar las capas cargadas {id: {layer, nombre, filename}}
+        var contadorCapas = 0;
+        var autorizado = false;
+
+        // ---- Referencias a elementos DOM ----
+        var btnCargar = document.getElementById('btn-cargar');
+        var modalClave = document.getElementById('modal-clave');
+        var inputClave = document.getElementById('input-clave');
+        var btnClaveAceptar = document.getElementById('btn-clave-aceptar');
+        var btnClaveCancelar = document.getElementById('btn-clave-cancelar');
+        var mensajeError = document.getElementById('mensaje-error-clave');
+        var inputArchivo = document.getElementById('input-archivo');
+        var capasCargadasContainer = document.getElementById('capas-cargadas-container');
+        var listaCapasCargadas = document.getElementById('lista-capas-cargadas');
+        var btnEliminarTodas = document.getElementById('btn-eliminar-todas');
+
+        // ---- Función para mostrar/ocultar el modal de clave ----
+        function mostrarModalClave() {
+            modalClave.classList.add('visible');
+            inputClave.value = '';
+            mensajeError.classList.remove('visible');
+            inputClave.focus();
+        }
+
+        function ocultarModalClave() {
+            modalClave.classList.remove('visible');
+            inputClave.value = '';
+            mensajeError.classList.remove('visible');
+        }
+
+        // ---- Función para validar clave ----
+        function validarClave() {
+            var claveIngresada = inputClave.value.trim();
+            if (claveIngresada === CLAVE_AUTORIZADA) {
+                autorizado = true;
+                ocultarModalClave();
+                // Abrir el selector de archivos
+                inputArchivo.click();
+                // Resetear autorización después de un tiempo (opcional)
+                // autorizado = false;
+            } else {
+                mensajeError.classList.add('visible');
+                inputClave.value = '';
+                inputClave.focus();
+            }
+        }
+
+        // ---- Eventos del modal de clave ----
+        btnCargar.addEventListener('click', function() {
+            mostrarModalClave();
+        });
+
+        btnClaveAceptar.addEventListener('click', validarClave);
+
+        btnClaveCancelar.addEventListener('click', function() {
+            ocultarModalClave();
+        });
+
+        inputClave.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                validarClave();
+            }
+            if (e.key === 'Escape') {
+                ocultarModalClave();
+            }
+        });
+
+        // ---- Función para cargar archivo ----
+        function cargarArchivo(event) {
+            var archivo = event.target.files[0];
+            if (!archivo) return;
+
+            // Verificar extensión
+            var extensionesPermitidas = ['.kml', '.kmz', '.geojson', '.json', '.shp', '.zip'];
+            var nombreArchivo = archivo.name.toLowerCase();
+            var extensionValida = extensionesPermitidas.some(function(ext) {
+                return nombreArchivo.endsWith(ext);
+            });
+
+            if (!extensionValida) {
+                alert('Formato no soportado. Por favor use: .kml, .kmz, .geojson, .json, .shp o .zip');
+                inputArchivo.value = '';
+                return;
+            }
+
+            // Usar el plugin L.FileLayer para cargar el archivo
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    // Intentar cargar con el plugin
+                    var capa = L.fileLayer(archivo, {
+                        onEachFeature: function(feature, layer) {
+                            // Si tiene propiedades, mostrar popup
+                            if (feature.properties) {
+                                var contenido = '<table>';
+                                for (var key in feature.properties) {
+                                    if (feature.properties[key] !== null && feature.properties[key] !== undefined) {
+                                        contenido += '<tr><th>' + key + '</th><td>' + feature.properties[key] + '</td></tr>';
+                                    }
+                                }
+                                contenido += '</table>';
+                                layer.bindPopup(contenido, { maxHeight: 300 });
+                            }
+                        }
+                    });
+
+                    capa.addTo(map);
+
+                    // Generar ID único para la capa
+                    contadorCapas++;
+                    var idCapa = 'capa_' + contadorCapas;
+
+                    // Guardar referencia
+                    capasCargadas[idCapa] = {
+                        layer: capa,
+                        nombre: archivo.name,
+                        filename: archivo.name
+                    };
+
+                    // Actualizar lista de capas cargadas
+                    actualizarListaCapas();
+
+                    // Ajustar vista a la capa cargada
+                    try {
+                        map.fitBounds(capa.getBounds());
+                    } catch(e) {
+                        // Si no se pueden obtener bounds, ignorar
+                    }
+
+                    // Guardar en localStorage
+                    guardarCapasEnLocalStorage();
+
+                    console.log('Capa cargada exitosamente: ' + archivo.name);
+
+                } catch (error) {
+                    alert('Error al cargar el archivo. Verifique que sea un formato válido.');
+                    console.error('Error cargando archivo:', error);
+                }
+            };
+
+            reader.onerror = function() {
+                alert('Error al leer el archivo.');
+            };
+
+            // Leer el archivo según su tipo
+            if (archivo.name.endsWith('.shp') || archivo.name.endsWith('.zip')) {
+                // Para SHP y ZIP, usar shpjs
+                var shpReader = new FileReader();
+                shpReader.onload = function(e) {
+                    try {
+                        // Usar shpjs para leer el archivo
+                        var buffer = e.target.result;
+                        shp(buffer).then(function(geojson) {
+                            // Crear capa a partir del GeoJSON
+                            var capa = L.geoJson(geojson, {
+                                onEachFeature: function(feature, layer) {
+                                    if (feature.properties) {
+                                        var contenido = '<table>';
+                                        for (var key in feature.properties) {
+                                            if (feature.properties[key] !== null && feature.properties[key] !== undefined) {
+                                                contenido += '<tr><th>' + key + '</th><td>' + feature.properties[key] + '</td></tr>';
+                                            }
+                                        }
+                                        contenido += '</table>';
+                                        layer.bindPopup(contenido, { maxHeight: 300 });
+                                    }
+                                }
+                            });
+
+                            capa.addTo(map);
+
+                            contadorCapas++;
+                            var idCapa = 'capa_' + contadorCapas;
+                            capasCargadas[idCapa] = {
+                                layer: capa,
+                                nombre: archivo.name,
+                                filename: archivo.name
+                            };
+
+                            actualizarListaCapas();
+                            try {
+                                map.fitBounds(capa.getBounds());
+                            } catch(e) {}
+                            guardarCapasEnLocalStorage();
+                            console.log('Capa SHP cargada exitosamente: ' + archivo.name);
+                        }).catch(function(err) {
+                            alert('Error al procesar el archivo SHP. Verifique que sea un archivo válido.');
+                            console.error('Error SHP:', err);
+                        });
+                    } catch (error) {
+                        alert('Error al leer el archivo SHP.');
+                        console.error('Error:', error);
+                    }
+                };
+                shpReader.readAsArrayBuffer(archivo);
+            } else {
+                // Para KML, KMZ, GeoJSON usar el plugin
+                var layer = L.fileLayer(archivo);
+                layer.addTo(map);
+
+                contadorCapas++;
+                var idCapa = 'capa_' + contadorCapas;
+                capasCargadas[idCapa] = {
+                    layer: layer,
+                    nombre: archivo.name,
+                    filename: archivo.name
+                };
+
+                actualizarListaCapas();
+                try {
+                    map.fitBounds(layer.getBounds());
+                } catch(e) {}
+                guardarCapasEnLocalStorage();
+                console.log('Capa cargada exitosamente: ' + archivo.name);
+            }
+
+            // Limpiar el input para poder cargar el mismo archivo nuevamente
+            inputArchivo.value = '';
+        }
+
+        // ---- Función para actualizar la lista de capas cargadas ----
+        function actualizarListaCapas() {
+            var keys = Object.keys(capasCargadas);
+            if (keys.length === 0) {
+                capasCargadasContainer.classList.remove('visible');
+                return;
+            }
+
+            capasCargadasContainer.classList.add('visible');
+            var html = '';
+
+            keys.forEach(function(id) {
+                var capa = capasCargadas[id];
+                var nombre = capa.nombre || 'Capa sin nombre';
+                // Truncar nombre si es muy largo
+                if (nombre.length > 25) {
+                    nombre = nombre.substring(0, 22) + '...';
+                }
+                html += '<div class="capa-item" data-id="' + id + '">' +
+                    '<span class="capa-nombre">📄 ' + nombre + '</span>' +
+                    '<button class="capa-eliminar" data-id="' + id + '" title="Eliminar esta capa">🗑️</button>' +
+                    '</div>';
+            });
+
+            listaCapasCargadas.innerHTML = html;
+
+            // Agregar event listeners a los botones de eliminar
+            document.querySelectorAll('.capa-eliminar').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = this.getAttribute('data-id');
+                    eliminarCapa(id);
+                });
+            });
+        }
+
+        // ---- Función para eliminar una capa ----
+        function eliminarCapa(id) {
+            if (capasCargadas[id]) {
+                var capa = capasCargadas[id];
+                if (capa.layer) {
+                    map.removeLayer(capa.layer);
+                }
+                delete capasCargadas[id];
+                actualizarListaCapas();
+                guardarCapasEnLocalStorage();
+                console.log('Capa eliminada: ' + (capa.nombre || id));
+            }
+        }
+
+        // ---- Función para eliminar todas las capas ----
+        btnEliminarTodas.addEventListener('click', function() {
+            var keys = Object.keys(capasCargadas);
+            if (keys.length === 0) return;
+
+            if (confirm('¿Está seguro de eliminar todas las capas cargadas (' + keys.length + ' capas)?')) {
+                keys.forEach(function(id) {
+                    if (capasCargadas[id] && capasCargadas[id].layer) {
+                        map.removeLayer(capasCargadas[id].layer);
+                    }
+                });
+                capasCargadas = {};
+                actualizarListaCapas();
+                guardarCapasEnLocalStorage();
+                console.log('Todas las capas eliminadas.');
+            }
+        });
+
+        // ---- Función para guardar capas en localStorage ----
+        function guardarCapasEnLocalStorage() {
+            try {
+                // Solo guardamos los nombres de archivo para poder recargarlos
+                var datos = [];
+                var keys = Object.keys(capasCargadas);
+                keys.forEach(function(id) {
+                    datos.push({
+                        id: id,
+                        nombre: capasCargadas[id].nombre,
+                        filename: capasCargadas[id].filename
+                    });
+                });
+                localStorage.setItem('capas-cargadas-datos', JSON.stringify(datos));
+            } catch(e) {
+                console.log('No se pudo guardar en localStorage:', e);
+            }
+        }
+
+        // ---- Función para restaurar capas desde localStorage ----
+        function restaurarCapas() {
+            try {
+                var datosStr = localStorage.getItem('capas-cargadas-datos');
+                if (!datosStr) return;
+
+                var datos = JSON.parse(datosStr);
+                // Solo mostramos un mensaje indicando que hay capas guardadas
+                // pero no las recargamos automáticamente porque necesitamos los archivos
+                if (datos.length > 0) {
+                    console.log('Hay ' + datos.length + ' capas guardadas en localStorage. Los archivos deben recargarse manualmente.');
+                    // Mostrar un mensaje en la consola y en la interfaz
+                    var mensaje = document.createElement('div');
+                    mensaje.style.cssText = 'position:fixed; bottom:80px; left:50%; transform:translateX(-50%); z-index:9998; background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:8px; font-size:13px; font-family:Arial; max-width:80%; text-align:center;';
+                    mensaje.innerHTML = '💡 Hay ' + datos.length + ' capa(s) guardada(s) de sesiones anteriores. Use "Cargar" para volver a añadirlas.';
+                    document.body.appendChild(mensaje);
+                    setTimeout(function() {
+                        mensaje.remove();
+                    }, 5000);
+                }
+            } catch(e) {
+                console.log('Error restaurando capas:', e);
+            }
+        }
+
+        // ---- Evento para cargar archivo ----
+        inputArchivo.addEventListener('change', cargarArchivo);
+
+        // ---- Inicializar ----
+        actualizarListaCapas();
+        restaurarCapas();
+
+        // ---- Tecla Escape para cerrar modal de clave ----
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalClave.classList.contains('visible')) {
+                ocultarModalClave();
+            }
+        });
+
+        // ---- Clic fuera del modal para cerrar ----
+        modalClave.addEventListener('click', function(e) {
+            if (e.target === modalClave) {
+                ocultarModalClave();
+            }
+        });
+
         </script>
     </body>
 </html>
